@@ -47,6 +47,6 @@ streamlit run app/streamlit_app.py     # dashboard exploratório
 - `data/raw/` e o `.sqlite` são **git-ignored** (regeráveis pelo pipeline).
 
 ## Gotchas
-- "Ano" é heurística: sufixo `AAAA` do id `NNN/AAAA` (ver `transform.ano_de`).
+- "Ano" (DDCM-Ano) vem do `idDDCM`, com fallback para o `coce` (ver `transform.ano_ddcm`).
 - Dashboard estático carrega `dashboard/data/dataset.js` (`window.DATASET`) para funcionar em `file://`.
 - Se o Cloudflare bloquear em lote, aumentar `http.delay_seconds` e rodar `--skip-extract` para retomar.

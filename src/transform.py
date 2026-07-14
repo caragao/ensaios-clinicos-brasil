@@ -11,12 +11,17 @@ import re
 ANO_RE = re.compile(r"/(\d{4})\s*$")
 
 
-def ano_de(coce) -> int | None:
-    """Deriva o ano do sufixo NNN/AAAA do id do estudo."""
-    if not coce:
+def _ano(valor) -> int | None:
+    """Extrai o ano do sufixo NNN/AAAA."""
+    if not valor:
         return None
-    m = ANO_RE.search(str(coce))
+    m = ANO_RE.search(str(valor))
     return int(m.group(1)) if m else None
+
+
+def ano_ddcm(det: dict) -> int | None:
+    """Ano do DDCM: preferir idDDCM (DDCM - Ano); fallback para o id do estudo (coce)."""
+    return _ano(det.get("idDDCM")) or _ano(det.get("id"))
 
 
 def inst_key(inst: dict) -> str:
@@ -36,14 +41,18 @@ def _clean(s):
 def build(details: list[dict], ano_min=None, ano_max=None):
     estudos, participacoes = [], []
     instituicoes: dict[str, dict] = {}
+    vistos: set = set()  # dedup por coce (a listagem pode repetir estudos)
 
     for det in details:
         coce = det.get("id")
-        ano = ano_de(coce)
+        if coce in vistos:
+            continue
+        ano = ano_ddcm(det)
         if ano is not None and ano_min and ano < ano_min:
             continue
         if ano is not None and ano_max and ano > ano_max:
             continue
+        vistos.add(coce)
 
         estudos.append({
             "coce": coce,

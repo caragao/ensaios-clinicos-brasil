@@ -6,7 +6,7 @@
 | `coce` | ANVISA `id` | id do estudo `NNN/AAAA` (PK) |
 | `ddcmcoce` | ANVISA `idDDCM` | id do DDCM (pode ser null) |
 | `numero_processo` | ANVISA `numeroProcesso` | nº do processo ANVISA |
-| `ano` | derivado | sufixo `AAAA` de `coce` (heurística) |
+| `ano` | derivado | **DDCM-Ano**: sufixo `AAAA` de `idDDCM`; fallback para `coce` |
 | `patrocinador` | ANVISA `empresa` | patrocinador do estudo |
 | `cnpj_patrocinador` | ANVISA `cnpj` | CNPJ do patrocinador |
 | `medicamento` | ANVISA `nomeProduto` | medicamento experimental |
@@ -44,7 +44,9 @@
 | `investigadores` | ANVISA `investigadores[].nome` | investigadores (separados por `;`) |
 
 ## Regras de negócio
-- **Ano**: derivado do id do estudo; estudos fora de `[ano_min, ano_max]` (config) são descartados.
+- **Ano (DDCM-Ano)**: derivado do `idDDCM` (ano do DDCM), com fallback para o `coce`; estudos fora
+  de `[ano_min, ano_max]` (config) são descartados. Como o regime de DDCM começou em 2015, estudos
+  antigos sem DDCM (idDDCM nulo) tendem a ficar fora da janela 2015–2025.
 - **Dedup de instituição**: prioridade CNES > CNPJ > nome (uppercase).
 - **Enriquecimento**: só instituições com CNES válido; demais ficam com `match_cnes=0`.
 - **Pacientes agregados**: soma de `num_pacientes` das participações (pode contar o mesmo paciente

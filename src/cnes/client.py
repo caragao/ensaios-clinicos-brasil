@@ -29,11 +29,22 @@ class CnesClient:
         self.session.headers.update({
             "User-Agent": h["user_agent"], "Accept": "application/json",
         })
+        self.ibge_list_url = self.ibge_url  # .../localidades/municipios
         self.mun_cache_path = cfg["paths"]["municipios_cache"]
-        self.mun_cache = {}
+        # Mapa completo IBGE: prefixo de 6 dígitos -> nome do município.
+        # (O CNES fornece o código IBGE de 6 dígitos, sem o dígito verificador.)
+        self.mun_map = self._load_municipios()
+
+    def _load_municipios(self) -> dict:
         if os.path.exists(self.mun_cache_path):
             with open(self.mun_cache_path, encoding="utf-8") as fh:
-                self.mun_cache = json.load(fh)
+                return json.load(fh)
+        data = self._get(self.ibge_list_url) or []
+        mun_map = {str(x["id"])[:6]: x["nome"] for x in data if x.get("id")}
+        with open(self.mun_cache_path, "w", encoding="utf-8") as fh:
+            json.dump(mun_map, fh, ensure_ascii=False)
+        print(f"[cnes] mapa IBGE de municípios carregado ({len(mun_map)})")
+        return mun_map
 
     def _get(self, url: str):
         try:
@@ -49,23 +60,31 @@ class CnesClient:
     def municipio_nome(self, codigo_municipio) -> str | None:
         if codigo_municipio in (None, ""):
             return None
-        key = str(codigo_municipio)
-        if key in self.mun_cache:
-            return self.mun_cache[key]
-        data = self._get(f"{self.ibge_url}/{key}")
-        nome = data.get("nome") if isinstance(data, dict) else None
-        self.mun_cache[key] = nome
-        return nome
+        return self.mun_map.get(str(codigo_municipio)[:6])
 
     def save_municipio_cache(self):
-        with open(self.mun_cache_path, "w", encoding="utf-8") as fh:
-            json.dump(self.mun_cache, fh, ensure_ascii=False, indent=1)
+        # Mapa já persistido em _load_municipios; mantido por compatibilidade.
+        pass
 
     def estabelecimento(self, cnes: str) -> dict | None:
-        """Retorna dados normalizados do estabelecimento, ou None se não encontrado."""
+        """Retorna dados normalizados do estabelecimento, ou None se não encontrado.
+
+        Cacheia a resposta bruta em data/raw/cnes/{cnes}.json (re-execuções instantâneas).
+        """
         if not cnes:
             return None
-        data = self._get(f"{self.estab_url}/{str(cnes).strip()}")
+        cnes = str(cnes).strip()
+        cache_dir = os.path.join(os.path.dirname(self.mun_cache_path), "..", "raw", "cnes")
+        cache_dir = os.path.normpath(cache_dir)
+        os.makedirs(cache_dir, exist_ok=True)
+        cpath = os.path.join(cache_dir, f"{cnes}.json")
+        if os.path.exists(cpath):
+            with open(cpath, encoding="utf-8") as fh:
+                data = json.load(fh)
+        else:
+            data = self._get(f"{self.estab_url}/{cnes}")
+            with open(cpath, "w", encoding="utf-8") as fh:
+                json.dump(data, fh, ensure_ascii=False)
         if not isinstance(data, dict) or not data.get("codigo_cnes"):
             return None
         cod_uf = str(data.get("codigo_uf") or "")
