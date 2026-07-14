@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ensaios Clínicos no Brasil — Dashboard</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --ink:#e2e8f0; --muted:#94a3b8;
+    --accent:#38bdf8; --accent2:#818cf8; --green:#34d399; --amber:#fbbf24; --border:#334155;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h1{font-size:19px;margin:0}
+  header .sub{color:var(--muted);font-size:13px}
+  .wrap{padding:18px 22px;max-width:1400px;margin:0 auto}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+  .kpi{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .kpi .v{font-size:24px;font-weight:700}
+  .kpi .l{color:var(--muted);font-size:12px;margin-top:2px}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
+  .filters label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  select,input{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:7px;padding:7px 8px;font-size:13px}
+  .filters .actions{display:flex;align-items:flex-end}
+  button{background:var(--accent);color:#04212f;border:0;border-radius:7px;padding:8px 12px;font-weight:600;cursor:pointer}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .card h3{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--ink)}
+  .card.full{grid-column:1/-1}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:600;font-size:12px;cursor:pointer;user-select:none}
+  tbody tr:hover{background:var(--panel2)}
+  tr.clickable{cursor:pointer}
+  .tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;background:var(--panel2);border:1px solid var(--border);color:var(--muted)}
+  .bar-row{display:flex;align-items:center;gap:8px;margin:3px 0}
+  .bar-row .lab{width:38%;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-row .track{flex:1;background:var(--panel2);border-radius:5px;overflow:hidden;height:16px}
+  .bar-row .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .bar-row .val{width:52px;text-align:right;font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)}
+  .overlay{position:fixed;inset:0;background:rgba(2,6,23,.7);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:20}
+  .overlay.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;max-width:960px;width:100%;padding:20px}
+  .modal h2{margin:0 0 4px;font-size:18px}
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0}
+  .meta-grid .m .l{color:var(--muted);font-size:11px}
+  .meta-grid .m .v{font-size:14px;font-weight:600}
+  .close{float:right}
+  svg text{fill:var(--muted);font-size:11px}
+  #empty{padding:40px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Ensaios Clínicos no Brasil</h1>
+  <span class="sub" id="subtitle">Mapeamento de estudos e centros de pesquisa</span>
+</header>
+<div class="wrap">
+  <div id="empty">Carregando dados… Se nada aparecer, rode o pipeline: <code>python -m src.pipeline</code> (gera <code>dashboard/data/dataset.js</code>).</div>
+  <div id="app" style="display:none">
+    <div class="kpis" id="kpis"></div>
+    <div class="filters" id="filters">
+      <div><label>Ano</label><select id="f_ano"></select></div>
+      <div><label>Situação</label><select id="f_sit"></select></div>
+      <div><label>Fase</label><select id="f_fase"></select></div>
+      <div><label>Classe Terapêutica</label><select id="f_classe"></select></div>
+      <div><label>Patrocinador</label><select id="f_patroc"></select></div>
+      <div><label>UF da Instituição</label><select id="f_uf"></select></div>
+      <div><label>Instituição (busca)</label><input id="f_inst" placeholder="nome contém…"></div>
+      <div class="actions"><button class="ghost" id="btn_clear">Limpar filtros</button></div>
+    </div>
+
+    <div class="grid">
+      <div class="card full"><h3>Evolução — estudos por ano</h3><div id="c_ano"></div></div>
+      <div class="card"><h3>Por situação do estudo</h3><div id="c_sit"></div></div>
+      <div class="card"><h3>Top classes terapêuticas</h3><div id="c_classe"></div></div>
+      <div class="card"><h3>Top patrocinadores</h3><div id="c_patroc"></div></div>
+      <div class="card"><h3>Distribuição por UF</h3><div id="c_uf"></div></div>
+      <div class="card full">
+        <h3>Instituições de pesquisa <span class="muted">(clique numa linha para ver o detalhe)</span></h3>
+        <div style="max-height:420px;overflow:auto"><table id="t_inst">
+          <thead><tr>
+            <th data-k="nome">Instituição</th><th data-k="uf">UF</th><th data-k="municipio">Município</th>
+            <th data-k="natureza_juridica_desc">Natureza Jurídica</th>
+            <th data-k="n_estudos">Estudos</th><th data-k="n_pacientes">Pacientes</th>
+          </tr></thead><tbody></tbody>
+        </table></div>
+      </div>
+      <div class="card full">
+        <h3>Estudos filtrados</h3>
+        <div style="max-height:420px;overflow:auto"><table id="t_estudos">
+          <thead><tr>
+            <th data-k="ano">Ano</th><th data-k="medicamento">Medicamento</th>
+            <th data-k="classe_terapeutica">Classe</th><th data-k="fase">Fase</th>
+            <th data-k="situacao">Situação</th><th data-k="patrocinador">Patrocinador</th>
+            <th data-k="n_inst">Centros</th><th data-k="n_pac">Pacientes</th>
+          </tr></thead><tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal">
+  <button class="ghost close" id="modal_close">Fechar</button>
+  <h2 id="m_nome"></h2>
+  <div class="muted" id="m_sub"></div>
+  <div class="meta-grid" id="m_meta"></div>
+  <h3>Estudos que participou</h3>
+  <div style="max-height:340px;overflow:auto"><table id="m_estudos">
+    <thead><tr><th>Ano</th><th>Estudo (título)</th><th>Patrocinador</th><th>Fase</th><th>Situação</th><th>Pacientes</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</div></div>
+
+<script src="data/dataset.js" onerror="loadJSON()"></script>
+<script>
+function loadJSON(){ // fallback quando aberto via servidor
+  fetch('data/dataset.json').then(r=>r.json()).then(d=>{window.DATASET=d;boot();}).catch(()=>{});
+}
+</script>
+<script src="assets/app.js"></script>
+<script>if(window.DATASET) boot();</script>
+</body>
+</html>

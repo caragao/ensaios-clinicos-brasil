@@ -1,0 +1,18 @@
+# Dados brutos e base (podem ser regerados pelo pipeline)
+data/raw/
+data/processed/*.sqlite
+data/processed/municipios_cache.json
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Ambiente / IDE
+.env
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,32 @@
+# Configuração do pipeline de ensaios clínicos
+extract:
+  # IDs de fase da API ANVISA: IV=4, III/IV=12 (ver docs/anvisa_schema.md)
+  fases: ["4", "12"]
+  # Situações: vazio = todas. IDs em docs/anvisa_schema.md (Autorizado=2, Iniciado=3, Finalizado=4, ...)
+  situacoes: []
+  # Janela temporal (ano derivado do id do estudo NNN/AAAA). null = sem corte.
+  ano_min: 2015
+  ano_max: 2025
+  page_size: 100
+
+http:
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+  # Throttling para não acionar o Cloudflare
+  delay_seconds: 0.7
+  max_retries: 4
+  backoff_seconds: 3
+  timeout: 30
+
+anvisa:
+  base_url: "https://consultas.anvisa.gov.br/api/ensaio"
+  authorization: "Guest"
+
+cnes:
+  estabelecimentos_url: "https://apidadosabertos.saude.gov.br/cnes/estabelecimentos"
+  ibge_municipios_url: "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"
+
+paths:
+  raw_dir: "data/raw"
+  sqlite: "data/processed/ensaios.sqlite"
+  municipios_cache: "data/processed/municipios_cache.json"
+  dashboard_data: "dashboard/data"
