@@ -11,7 +11,7 @@ def enrich(instituicoes: list[dict], cfg: dict) -> list[dict]:
     for inst in instituicoes:
         inst.update({
             "uf": None, "uf_nome": None, "municipio": None, "codigo_municipio": None,
-            "natureza_juridica_cod": None, "natureza_juridica_desc": None, "natureza_grupo": None,
+            "natureza_juridica_cod": None, "natureza_juridica_desc": None, "natureza_grupo": None, "setor": None,
             "esfera_administrativa": None, "latitude": None, "longitude": None,
             "cnes_nome_razao": None, "cnes_nome_fantasia": None, "match_cnes": False,
         })
@@ -28,6 +28,7 @@ def enrich(instituicoes: list[dict], cfg: dict) -> list[dict]:
             "natureza_juridica_cod": est["natureza_juridica_cod"],
             "natureza_juridica_desc": est["natureza_juridica_desc"],
             "natureza_grupo": est["natureza_grupo"],
+            "setor": est["setor"],
             "esfera_administrativa": est["esfera_administrativa"],
             "latitude": est["latitude"], "longitude": est["longitude"],
             "cnes_nome_razao": est["nome_razao_social"],

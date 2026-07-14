@@ -36,6 +36,7 @@ CREATE TABLE instituicao (
     natureza_juridica_cod TEXT,
     natureza_juridica_desc TEXT,
     natureza_grupo TEXT,
+    setor TEXT,
     esfera_administrativa TEXT,
     latitude REAL,
     longitude REAL,
@@ -76,10 +77,10 @@ def load(sqlite_path: str, data: dict):
         )
         conn.executemany(
             """INSERT INTO instituicao (inst_key,nome,cnes,cnpj,uf,uf_nome,municipio,codigo_municipio,
-               natureza_juridica_cod,natureza_juridica_desc,natureza_grupo,esfera_administrativa,latitude,longitude,
+               natureza_juridica_cod,natureza_juridica_desc,natureza_grupo,setor,esfera_administrativa,latitude,longitude,
                cnes_nome_razao,cnes_nome_fantasia,match_cnes)
                VALUES (:inst_key,:nome,:cnes,:cnpj,:uf,:uf_nome,:municipio,:codigo_municipio,
-               :natureza_juridica_cod,:natureza_juridica_desc,:natureza_grupo,:esfera_administrativa,:latitude,:longitude,
+               :natureza_juridica_cod,:natureza_juridica_desc,:natureza_grupo,:setor,:esfera_administrativa,:latitude,:longitude,
                :cnes_nome_razao,:cnes_nome_fantasia,:match_cnes)""",
             [{**i, "match_cnes": 1 if i.get("match_cnes") else 0} for i in data["instituicoes"]],
         )

@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   let D, byCoce, partByInst, instByKey;
-  const F = { ano: "", sit: "", fase: "", classe: "", patroc: "", uf: "", natureza: "", inst: "" };
+  const F = { ano: "", sit: "", fase: "", classe: "", patroc: "", uf: "", setor: "", natureza: "", inst: "" };
   let instSort = { k: "n_estudos", dir: -1 };
   let estSort = { k: "ano", dir: -1 };
 
@@ -33,6 +33,7 @@
     fill("f_classe", uniqSorted(D.estudos.map(e => e.classe_terapeutica)));
     fill("f_patroc", uniqSorted(D.estudos.map(e => e.patrocinador)));
     fill("f_uf", uniqSorted(D.instituicoes.map(i => i.uf)));
+    fill("f_setor", uniqSorted(D.instituicoes.map(i => i.setor)));
     fill("f_natureza", uniqSorted(D.instituicoes.map(i => i.natureza_grupo)));
   }
   function fill(id, vals) {
@@ -41,7 +42,7 @@
   }
 
   function wireEvents() {
-    const map = { f_ano: "ano", f_sit: "sit", f_fase: "fase", f_classe: "classe", f_patroc: "patroc", f_uf: "uf", f_natureza: "natureza" };
+    const map = { f_ano: "ano", f_sit: "sit", f_fase: "fase", f_classe: "classe", f_patroc: "patroc", f_uf: "uf", f_setor: "setor", f_natureza: "natureza" };
     Object.entries(map).forEach(([id, key]) => {
       document.getElementById(id).addEventListener("change", e => { F[key] = e.target.value; render(); });
     });
@@ -75,11 +76,12 @@
   function instMatch(inst) {
     if (!inst) return false;
     if (F.uf && inst.uf !== F.uf) return false;
+    if (F.setor && inst.setor !== F.setor) return false;
     if (F.natureza && inst.natureza_grupo !== F.natureza) return false;
     if (F.inst && !((inst.nome || "").toLowerCase().includes(F.inst))) return false;
     return true;
   }
-  const instFilterActive = () => F.uf || F.natureza || F.inst;
+  const instFilterActive = () => F.uf || F.setor || F.natureza || F.inst;
 
   function computeView() {
     // participações que satisfazem estudo + instituição
@@ -106,7 +108,8 @@
     renderCat("c_sit", count(estudos, "situacao"));
     renderCat("c_classe", count(estudos, "classe_terapeutica"), 8);
     renderCat("c_patroc", count(estudos, "patrocinador"), 8);
-    renderCat("c_uf", countPartUF(parts));
+    renderCat("c_uf", countPartByInst(parts, "uf"));
+    renderCat("c_setor", countPartByInst(parts, "setor"));
     renderInstTable(parts);
     renderEstudoTable(estudos, parts);
   }
@@ -128,9 +131,9 @@
     rows.forEach(r => { const k = r[key] || "—"; m[k] = (m[k] || 0) + 1; });
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   }
-  function countPartUF(parts) {
+  function countPartByInst(parts, attr) {
     const m = {};
-    parts.forEach(p => { const uf = (instByKey[p.inst_key] || {}).uf || "—"; m[uf] = (m[uf] || 0) + 1; });
+    parts.forEach(p => { const v = (instByKey[p.inst_key] || {})[attr] || "—"; m[v] = (m[v] || 0) + 1; });
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   }
 
@@ -214,8 +217,8 @@
     const anos = parts.map(p => p.ano).filter(Boolean);
     const meta = [
       ["UF", i.uf || "—"], ["Município", i.municipio || "—"],
-      ["Natureza (grupo)", i.natureza_grupo || "—"], ["Natureza Jurídica", i.natureza_juridica_desc || "—"],
-      ["Esfera", i.esfera_administrativa || "—"],
+      ["Setor", i.setor || "—"], ["Natureza (grupo)", i.natureza_grupo || "—"],
+      ["Natureza Jurídica", i.natureza_juridica_desc || "—"], ["Esfera", i.esfera_administrativa || "—"],
       ["Estudos", new Set(parts.map(p => p.coce)).size], ["Pacientes (soma)", totalPac.toLocaleString("pt-BR")],
       ["Período", anos.length ? Math.min(...anos) + "–" + Math.max(...anos) : "—"],
     ];

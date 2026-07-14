@@ -30,6 +30,7 @@
 | `natureza_juridica_cod` | CNES | código CONCLA |
 | `natureza_juridica_desc` | ref CONCLA | descrição da natureza jurídica |
 | `natureza_grupo` | derivado | grupo CONCLA pelo 1º dígito do código (Administração Pública, Entidades Empresariais, Entidades Sem Fins Lucrativos, Pessoas Físicas, Organizações Internacionais/Outras) — usado no filtro |
+| `setor` | derivado | Público / Privado / Terceiro Setor / Outros. **Público** = Adm. Pública (1xxx) + estatais (Empresa Pública 2011, Soc. Economia Mista 2038); **Terceiro Setor** = sem fins lucrativos (3xxx); **Privado** = demais empresariais (2xxx) + pessoas físicas (4xxx) |
 | `esfera_administrativa` | CNES | Federal/Estadual/Municipal/Privada |
 | `latitude`, `longitude` | CNES | geolocalização |
 | `cnes_nome_razao`, `cnes_nome_fantasia` | CNES | nomes oficiais |

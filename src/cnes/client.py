@@ -16,6 +16,25 @@ def _load_ref(name: str) -> dict:
         return json.load(fh)
 
 
+# Empresas estatais (regime empresarial, mas controle público) — contam como setor Público.
+_ESTATAIS = {"2011", "2038"}  # Empresa Pública, Sociedade de Economia Mista
+
+
+def setor_publico_privado(nat_cod: str | None) -> str | None:
+    """Deriva o Setor a partir do código de natureza jurídica (CONCLA).
+
+    Público (Adm. Pública 1xxx + estatais) · Terceiro Setor (sem fins lucrativos 3xxx)
+    · Privado (demais empresariais 2xxx + pessoas físicas 4xxx) · Outros (5xxx).
+    """
+    if not nat_cod:
+        return None
+    if nat_cod in _ESTATAIS:
+        return "Público"
+    d = nat_cod[:1]
+    return {"1": "Público", "2": "Privado", "3": "Terceiro Setor",
+            "4": "Privado", "5": "Outros"}.get(d)
+
+
 class CnesClient:
     def __init__(self, cfg: dict):
         c, h = cfg["cnes"], cfg["http"]
@@ -103,6 +122,7 @@ class CnesClient:
             "natureza_juridica_cod": nat_code or None,
             "natureza_juridica_desc": self.nat.get(nat_code, f"Natureza Jurídica {nat_code}" if nat_code else None),
             "natureza_grupo": self.nat_grupo.get(nat_code[:1]) if nat_code else None,
+            "setor": setor_publico_privado(nat_code or None),
             "esfera_administrativa": data.get("descricao_esfera_administrativa"),
             "latitude": data.get("latitude_estabelecimento_decimo_grau"),
             "longitude": data.get("longitude_estabelecimento_decimo_grau"),
