@@ -29,6 +29,7 @@
 | `municipio`, `codigo_municipio` | CNES + IBGE | município |
 | `natureza_juridica_cod` | CNES | código CONCLA |
 | `natureza_juridica_desc` | ref CONCLA | descrição da natureza jurídica |
+| `natureza_grupo` | derivado | grupo CONCLA pelo 1º dígito do código (Administração Pública, Entidades Empresariais, Entidades Sem Fins Lucrativos, Pessoas Físicas, Organizações Internacionais/Outras) — usado no filtro |
 | `esfera_administrativa` | CNES | Federal/Estadual/Municipal/Privada |
 | `latitude`, `longitude` | CNES | geolocalização |
 | `cnes_nome_razao`, `cnes_nome_fantasia` | CNES | nomes oficiais |

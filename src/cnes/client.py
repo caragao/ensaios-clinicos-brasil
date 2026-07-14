@@ -25,6 +25,7 @@ class CnesClient:
         self.timeout = h["timeout"]
         self.uf = _load_ref("uf.json")
         self.nat = _load_ref("natureza_juridica.json")
+        self.nat_grupo = _load_ref("natureza_grupo.json")  # grupo CONCLA pelo 1º dígito
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": h["user_agent"], "Accept": "application/json",
@@ -101,6 +102,7 @@ class CnesClient:
             "codigo_municipio": data.get("codigo_municipio"),
             "natureza_juridica_cod": nat_code or None,
             "natureza_juridica_desc": self.nat.get(nat_code, f"Natureza Jurídica {nat_code}" if nat_code else None),
+            "natureza_grupo": self.nat_grupo.get(nat_code[:1]) if nat_code else None,
             "esfera_administrativa": data.get("descricao_esfera_administrativa"),
             "latitude": data.get("latitude_estabelecimento_decimo_grau"),
             "longitude": data.get("longitude_estabelecimento_decimo_grau"),

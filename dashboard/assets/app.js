@@ -33,7 +33,7 @@
     fill("f_classe", uniqSorted(D.estudos.map(e => e.classe_terapeutica)));
     fill("f_patroc", uniqSorted(D.estudos.map(e => e.patrocinador)));
     fill("f_uf", uniqSorted(D.instituicoes.map(i => i.uf)));
-    fill("f_natureza", uniqSorted(D.instituicoes.map(i => i.natureza_juridica_desc)));
+    fill("f_natureza", uniqSorted(D.instituicoes.map(i => i.natureza_grupo)));
   }
   function fill(id, vals) {
     const s = document.getElementById(id);
@@ -75,7 +75,7 @@
   function instMatch(inst) {
     if (!inst) return false;
     if (F.uf && inst.uf !== F.uf) return false;
-    if (F.natureza && inst.natureza_juridica_desc !== F.natureza) return false;
+    if (F.natureza && inst.natureza_grupo !== F.natureza) return false;
     if (F.inst && !((inst.nome || "").toLowerCase().includes(F.inst))) return false;
     return true;
   }
@@ -175,7 +175,7 @@
     let rows = Object.entries(agg).map(([k, a]) => {
       const i = instByKey[k] || {};
       return { inst_key: k, nome: i.nome || "—", uf: i.uf || "—", municipio: i.municipio || "—",
-               natureza_juridica_desc: i.natureza_juridica_desc || "—",
+               natureza_grupo: i.natureza_grupo || "—",
                n_estudos: a.estudos.size, n_pacientes: a.pac };
     });
     rows.sort(cmp(instSort));
@@ -183,7 +183,7 @@
     tb.innerHTML = rows.map(r =>
       `<tr class="clickable" data-k="${esc(r.inst_key)}">
         <td>${esc(r.nome)}</td><td>${esc(r.uf)}</td><td>${esc(r.municipio)}</td>
-        <td>${esc(r.natureza_juridica_desc)}</td><td>${r.n_estudos}</td><td>${r.n_pacientes.toLocaleString("pt-BR")}</td>
+        <td>${esc(r.natureza_grupo)}</td><td>${r.n_estudos}</td><td>${r.n_pacientes.toLocaleString("pt-BR")}</td>
       </tr>`).join("") || `<tr><td colspan="6" class="muted">Nenhuma instituição.</td></tr>`;
     tb.querySelectorAll("tr.clickable").forEach(tr =>
       tr.addEventListener("click", () => openModal(tr.dataset.k)));
@@ -214,7 +214,8 @@
     const anos = parts.map(p => p.ano).filter(Boolean);
     const meta = [
       ["UF", i.uf || "—"], ["Município", i.municipio || "—"],
-      ["Natureza Jurídica", i.natureza_juridica_desc || "—"], ["Esfera", i.esfera_administrativa || "—"],
+      ["Natureza (grupo)", i.natureza_grupo || "—"], ["Natureza Jurídica", i.natureza_juridica_desc || "—"],
+      ["Esfera", i.esfera_administrativa || "—"],
       ["Estudos", new Set(parts.map(p => p.coce)).size], ["Pacientes (soma)", totalPac.toLocaleString("pt-BR")],
       ["Período", anos.length ? Math.min(...anos) + "–" + Math.max(...anos) : "—"],
     ];

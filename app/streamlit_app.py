@@ -22,7 +22,7 @@ def load():
     inst = pd.read_sql_query("SELECT * FROM instituicao", con)
     part = pd.read_sql_query("SELECT * FROM participacao", con)
     con.close()
-    part = part.merge(inst[["inst_key", "nome", "uf", "municipio", "natureza_juridica_desc"]],
+    part = part.merge(inst[["inst_key", "nome", "uf", "municipio", "natureza_grupo", "natureza_juridica_desc"]],
                       on="inst_key", how="left")
     part = part.merge(est[["coce", "fase", "situacao", "classe_terapeutica", "patrocinador", "titulo", "medicamento"]],
                       on="coce", how="left")
@@ -48,7 +48,7 @@ with st.sidebar:
     f_classe = st.multiselect("Classe Terapêutica", opts(est["classe_terapeutica"]))
     f_patroc = st.multiselect("Patrocinador", opts(est["patrocinador"]))
     f_uf = st.multiselect("UF da Instituição", opts(inst["uf"]))
-    f_nat = st.multiselect("Natureza Jurídica", opts(inst["natureza_juridica_desc"]))
+    f_nat = st.multiselect("Natureza Jurídica (grupo)", opts(inst["natureza_grupo"]))
     f_inst = st.text_input("Instituição (busca)")
 
 # Aplica filtros de estudo
@@ -61,7 +61,7 @@ if f_patroc: e = e[e["patrocinador"].isin(f_patroc)]
 
 p = part[part["coce"].isin(e["coce"])]
 if f_uf: p = p[p["uf"].isin(f_uf)]
-if f_nat: p = p[p["natureza_juridica_desc"].isin(f_nat)]
+if f_nat: p = p[p["natureza_grupo"].isin(f_nat)]
 if f_inst: p = p[p["nome"].str.contains(f_inst, case=False, na=False)]
 if f_uf or f_nat or f_inst:
     e = e[e["coce"].isin(p["coce"])]
@@ -105,7 +105,7 @@ agg = (p.groupby("inst_key")
         .reset_index()
         .merge(inst, on="inst_key", how="left")
         .sort_values("estudos", ascending=False))
-tabela = agg[["nome", "uf", "municipio", "natureza_juridica_desc", "estudos", "pacientes"]]
+tabela = agg[["nome", "uf", "municipio", "natureza_grupo", "natureza_juridica_desc", "estudos", "pacientes"]]
 st.dataframe(tabela, use_container_width=True, hide_index=True)
 
 st.subheader("Detalhe da instituição")
@@ -117,7 +117,8 @@ if len(agg):
     d2.metric("Município", row["municipio"] or "—")
     d3.metric("Estudos", int(row["estudos"]))
     d4.metric("Pacientes (soma)", f"{int(row['pacientes']):,}")
-    st.write(f"**Natureza Jurídica:** {row['natureza_juridica_desc'] or '—'}  ·  "
+    st.write(f"**Grupo:** {row['natureza_grupo'] or '—'}  ·  "
+             f"**Natureza Jurídica:** {row['natureza_juridica_desc'] or '—'}  ·  "
              f"**CNES:** {row['cnes'] or '—'}  ·  **CNPJ:** {row['cnpj'] or '—'}")
     det = (part[part["inst_key"] == row["inst_key"]]
            [["ano", "titulo", "patrocinador", "fase", "situacao", "num_pacientes"]]
