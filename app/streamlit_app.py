@@ -48,6 +48,7 @@ with st.sidebar:
     f_classe = st.multiselect("Classe Terapêutica", opts(est["classe_terapeutica"]))
     f_patroc = st.multiselect("Patrocinador", opts(est["patrocinador"]))
     f_uf = st.multiselect("UF da Instituição", opts(inst["uf"]))
+    f_nat = st.multiselect("Natureza Jurídica", opts(inst["natureza_juridica_desc"]))
     f_inst = st.text_input("Instituição (busca)")
 
 # Aplica filtros de estudo
@@ -60,8 +61,9 @@ if f_patroc: e = e[e["patrocinador"].isin(f_patroc)]
 
 p = part[part["coce"].isin(e["coce"])]
 if f_uf: p = p[p["uf"].isin(f_uf)]
+if f_nat: p = p[p["natureza_juridica_desc"].isin(f_nat)]
 if f_inst: p = p[p["nome"].str.contains(f_inst, case=False, na=False)]
-if f_uf or f_inst:
+if f_uf or f_nat or f_inst:
     e = e[e["coce"].isin(p["coce"])]
 
 # ---- KPIs ----

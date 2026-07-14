@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   let D, byCoce, partByInst, instByKey;
-  const F = { ano: "", sit: "", fase: "", classe: "", patroc: "", uf: "", inst: "" };
+  const F = { ano: "", sit: "", fase: "", classe: "", patroc: "", uf: "", natureza: "", inst: "" };
   let instSort = { k: "n_estudos", dir: -1 };
   let estSort = { k: "ano", dir: -1 };
 
@@ -33,6 +33,7 @@
     fill("f_classe", uniqSorted(D.estudos.map(e => e.classe_terapeutica)));
     fill("f_patroc", uniqSorted(D.estudos.map(e => e.patrocinador)));
     fill("f_uf", uniqSorted(D.instituicoes.map(i => i.uf)));
+    fill("f_natureza", uniqSorted(D.instituicoes.map(i => i.natureza_juridica_desc)));
   }
   function fill(id, vals) {
     const s = document.getElementById(id);
@@ -40,7 +41,7 @@
   }
 
   function wireEvents() {
-    const map = { f_ano: "ano", f_sit: "sit", f_fase: "fase", f_classe: "classe", f_patroc: "patroc", f_uf: "uf" };
+    const map = { f_ano: "ano", f_sit: "sit", f_fase: "fase", f_classe: "classe", f_patroc: "patroc", f_uf: "uf", f_natureza: "natureza" };
     Object.entries(map).forEach(([id, key]) => {
       document.getElementById(id).addEventListener("change", e => { F[key] = e.target.value; render(); });
     });
@@ -74,20 +75,22 @@
   function instMatch(inst) {
     if (!inst) return false;
     if (F.uf && inst.uf !== F.uf) return false;
+    if (F.natureza && inst.natureza_juridica_desc !== F.natureza) return false;
     if (F.inst && !((inst.nome || "").toLowerCase().includes(F.inst))) return false;
     return true;
   }
+  const instFilterActive = () => F.uf || F.natureza || F.inst;
 
   function computeView() {
     // participações que satisfazem estudo + instituição
     const parts = D.participacoes.filter(p => {
       const e = byCoce[p.coce]; if (!e || !estudoMatch(e)) return false;
-      if ((F.uf || F.inst) && !instMatch(instByKey[p.inst_key])) return false;
+      if (instFilterActive() && !instMatch(instByKey[p.inst_key])) return false;
       return true;
     });
     // estudos visíveis = os que têm ao menos uma participação válida (ou todos, se sem filtro de inst)
     let estudos;
-    if (F.uf || F.inst) {
+    if (instFilterActive()) {
       const cs = new Set(parts.map(p => p.coce));
       estudos = D.estudos.filter(e => cs.has(e.coce));
     } else {
